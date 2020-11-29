@@ -5,6 +5,7 @@ namespace App\Controller;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\Form\Exception\LogicException;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -25,9 +26,9 @@ class ScrapingController extends AbstractController
 
 
         $form = $this->createFormBuilder()
-            ->add('type', TextType::class)
-            ->add('postal', TextType::class)
-            ->add('save', SubmitType::class, ['label' => 'Import'])
+            ->add('type', TextType::class , ['label' =>"Secteur d’activités" ,"attr" => ["class" => "input100"]])
+            ->add('postal', TextType::class, ['label' => 'Code postal / Département ' ,"attr" => ["class" => "input100"]])
+            ->add('save', SubmitType::class, ['label' => 'Importer' ,"attr" => ["class" => "contact100-form-btn"]])
             ->getForm();
 
 
@@ -36,78 +37,96 @@ class ScrapingController extends AbstractController
 
             $data = $form->getData();
 
-            $scraping['postal'] = urlencode( $data["postal"]);
-            $scraping['type'] = urlencode ($data["type"]);
+            $scraping['postal'] = urlencode($data["postal"]);
+            $scraping['type'] = urlencode($data["type"]);
 
-        $scraping['url'] = "https://www.pagesjaunes.fr/recherche/departement/".$scraping['postal']."/".$scraping['type']."?quoiqui=".$scraping['type'];
-        $datas = [];
-        $url = $scraping['url'];
-        $opts = array('http' => array('header' => "User-Agent:MyAgent/1.0\r\n"));
-        $context = stream_context_create($opts);
-        $html = file_get_contents($url, false, $context);
-        $crawler = new Crawler($html);
-        $pages = $this->countPaginationPages($crawler->filter('span.pagination-compteur ')->text());
-        //  $fp = fopen('php://output', 'w');
-
-            $type = $data['type'];
-            $postal = $data['postal'];
-        for ($j = 1; $j < $pages + 1; $j++) {
+            $scraping['url'] = "https://www.pagesjaunes.fr/recherche/departement/" . $scraping['postal'] . "/" . $scraping['type'] . "?quoiqui=" . $scraping['type'];
+            $datas = [];
             $url = $scraping['url'];
-            if ($j > 1) $url .= "&page=" . $j;
             $opts = array('http' => array('header' => "User-Agent:MyAgent/1.0\r\n"));
             $context = stream_context_create($opts);
-            $html = file_get_contents($url, false, $context);
-            $crawler = new Crawler($html);
 
-            $datas = array_merge($datas, $crawler->filter('li.bi-pro')->each(function (Crawler $node, $i) use ($postal,$type) {
+            try {
+                $html = file_get_contents($url, false, $context);
+                $crawler = new Crawler($html);
+                try {
+                    $pages = $this->countPaginationPages($crawler->filter('span.pagination-compteur ')->text());
+                    //  $fp = fopen('php://output', 'w');
+                } catch ( \InvalidArgumentException $m){
+                        return $this->render('scraping/index.html.twig', [
+                            'form' => $form->createView(),
+                            'message' => "Page jaune retourne une erreur",
+                        ]);
+                    }
+                $type = $data['type'];
+                $postal = $data['postal'];
+                for ($j = 1; $j < $pages + 1; $j++) {
+                    $url = $scraping['url'];
+                    if ($j > 1) $url .= "&page=" . $j;
+                    $opts = array('http' => array('header' => "User-Agent:MyAgent/1.0\r\n"));
+                    $context = stream_context_create($opts);
+                    $html = file_get_contents($url, false, $context);
+                    $crawler = new Crawler($html);
 
-                $sites = $node->filter('li.bi-site-internet')->each(function (Crawler $node, $s) use ($postal,$type) {
-                    return $node->filter('a')->text();
+                    $datas = array_merge($datas, $crawler->filter('li.bi-pro')->each(function (Crawler $node, $i) use ($postal, $type) {
 
-                });
-                foreach ($sites as $key => $site) {
-                    if ($site == "Rejoignez nous sur Facebook") unset($sites[$key]);
+                        $sites = $node->filter('li.bi-site-internet')->each(function (Crawler $node, $s) use ($postal, $type) {
+                            return $node->filter('a')->text();
+
+                        });
+                        foreach ($sites as $key => $site) {
+                            if ($site == "Rejoignez nous sur Facebook") unset($sites[$key]);
+                        }
+
+                        return [
+                            "type" => $type,
+                            "postal" => $postal,
+                            "Nom" => $node->filter('h3.noTrad')->filter('a')->text(),
+                            "téléphone" => ($node->filter('div.bi-contact-tel')->count() > 0) ? $node->filter('div.bi-contact-tel')->text() : "",
+                            "adresse" => $node->filter('a.adresse')->text(),
+                            "site" => implode(",", $sites),
+                        ];
+
+                    }
+
+                    ));
                 }
 
-                return [
-                    "type" => $type,
-                    "postal" => $postal,
-                    "Nom" => $node->filter('h3.noTrad')->filter('a')->text(),
-                    "téléphone" => ($node->filter('div.bi-contact-tel')->count() > 0) ? $node->filter('div.bi-contact-tel')->text() : "",
-                    "adresse" => $node->filter('a.adresse')->text(),
-                    "site" => implode(",", $sites),
-                ];
 
+                $fp = fopen('php://temp', 'w');
+                foreach ($datas as $fields) {
+                    fputcsv($fp, $fields, ';');
+                }
+
+                rewind($fp);
+                $response = new Response(stream_get_contents($fp));
+                fclose($fp);
+
+                $response->headers->set('Content-Type', 'text/csv');
+                $response->headers->set('charset', 'UTF-8');
+                $response->headers->set('Content-Encoding', 'UTF-8');
+
+                $response->setCharset('UTF-8');
+                $fileName = $scraping['postal'] . "-" . $scraping['type'] . ".csv";
+                $response->headers->set('Content-Disposition', "attachment; filename=" . $fileName . "");;
+
+                echo "\xEF\xBB\xBF";
+                return $response;
             }
-
-            ));
-        }
-
-
-        $fp = fopen('php://temp', 'w');
-        foreach ($datas as $fields) {
-            fputcsv($fp, $fields, ';');
-        }
-
-        rewind($fp);
-        $response = new Response(stream_get_contents($fp));
-        fclose($fp);
-
-        $response->headers->set('Content-Type', 'text/csv');
-        $response->headers->set('charset', 'UTF-8');
-        $response->headers->set('Content-Encoding', 'UTF-8');
-
-        $response->setCharset('UTF-8');
-        $fileName = $scraping['postal']."-".$scraping['type'].".csv";
-        $response->headers->set('Content-Disposition', "attachment; filename=".$fileName."");;
-        
-        echo "\xEF\xBB\xBF";
-        return $response;
-        }
+            catch ( LogicException $m){
+                return $this->render('scraping/index.html.twig', [
+                    'form' => $form->createView(),
+                    'message' => "Page jaune retourne une erreur",
+                ]);
+            }
+            }
 
         return $this->render('scraping/index.html.twig', [
             'form' => $form->createView(),
+            'message' => "",
+
         ]);
+
 
     }
 

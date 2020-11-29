@@ -3,18 +3,51 @@
 {% block title %}scraping{% endblock %}
 
 {% block body %}
-    {{ form_start(form) }}
-    <div class="my-custom-class-for-errors">
-        {{ form_errors(form) }}
-    </div>
 
-    <div class="row">
-        <div class="col">
-            {{ form_row(form.type) }}
+    {{ form_start(form, {'class': 'contact100-form validate-form'}) }}
+				<span class="contact100-form-title">
+					Scraping
+				</span>
+
+
+    {%   if message is defined %}
+<div style ="text-align: center;">
+    <span  class=" badge badge-info">
+					{{ message }}
+				</span>
+</div>
+    {%  endif %}
+
+    <label class="label-input100" for="type">{{ form_label(form.type) }} *</label>
+        <div class="wrap-input100 validate-input">
+            {{ form_widget(form.type) }}
+
+            <span class="focus-input100"></span>
         </div>
-        <div class="col" id="some-custom-id">
-            {{ form_row(form.postal) }}
+
+        <label class="label-input100" for="postal">{{ form_label(form.postal) }}  *</label>
+
+        <div class="wrap-input100  validate-input">
+                {{ form_widget(form.postal) }}
+            <span class="focus-input100"></span>
+
         </div>
-    </div>
-    {{ form_end(form) }}
+
+        <div class="container-contact100-form-btn">
+            {{ form_row(form.save) }}
+        </div>
+        {{ form_end(form) }}
+
+    </form>
+
+
+
+
+
+
+
+
+
+
+
 {% endblock %}
