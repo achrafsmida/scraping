@@ -43,8 +43,13 @@ class ScrapingController extends AbstractController
             $scraping['url'] = "https://www.pagesjaunes.fr/recherche/departement/" . $scraping['postal'] . "/" . $scraping['type'] . "?quoiqui=" . $scraping['type'];
             $datas = [];
             $url = $scraping['url'];
-            $opts = array('http' => array('header' => "User-Agent:MyAgent/1.0\r\n"));
-            $context = stream_context_create($opts);
+            $context = stream_context_create(
+                array(
+                    "http" => array(
+                        "header" => "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
+                    )
+                )
+            );
 
             try {
                 $html = file_get_contents($url, false, $context);
