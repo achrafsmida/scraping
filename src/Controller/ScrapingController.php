@@ -73,10 +73,7 @@ class ScrapingController extends AbstractController
 
             try {
                 $html = file_get_contents($url, false, $context);
-
-
-                curl_get_contents($url)
-
+                
 
                 $crawler = new Crawler($html);
                 try {
