@@ -18,6 +18,19 @@ class ScrapingController extends AbstractController
 {
 
 
+    function curl_get_contents($url)
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch,CURLOPT_USERAGENT,'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13');
+        $html = curl_exec($ch);
+        $data = curl_exec($ch);
+        curl_close($ch);
+        return $data;
+    }
+
+
     /**
      * @Route("/", name="scraping")
      */
@@ -46,13 +59,25 @@ class ScrapingController extends AbstractController
             $context = stream_context_create(
                 array(
                     "http" => array(
-                        "header" => "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
+                        'method'=>"GET",
+                        "header" => "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) 
+                            AppleWebKit/537.36 (KHTML, like Gecko) 
+                            Chrome/50.0.2661.102 Safari/537.36\r\n" .
+                            "accept: text/html,application/xhtml+xml,application/xml;q=0.9,
+                            image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3\r\n" .
+                            "accept-language: es-ES,es;q=0.9,en;q=0.8,it;q=0.7\r\n" .
+                            "accept-encoding: gzip, deflate, br\r\n"
                     )
                 )
             );
 
             try {
                 $html = file_get_contents($url, false, $context);
+
+
+                curl_get_contents($url)
+
+
                 $crawler = new Crawler($html);
                 try {
                     $pages = $this->countPaginationPages($crawler->filter('span.pagination-compteur ')->text());
@@ -68,8 +93,8 @@ class ScrapingController extends AbstractController
                 for ($j = 1; $j < $pages + 1; $j++) {
                     $url = $scraping['url'];
                     if ($j > 1) $url .= "&page=" . $j;
-                    $opts = array('http' => array('header' => "User-Agent:MyAgent/1.0\r\n"));
-                    $context = stream_context_create($opts);
+                 //   $opts = array('http' => array('header' => "User-Agent:MyAgent/1.0\r\n"));
+                 //   $context = stream_context_create($opts);
                     $html = file_get_contents($url, false, $context);
                     $crawler = new Crawler($html);
 
