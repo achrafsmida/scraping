@@ -18,35 +18,17 @@ class ScrapingController extends AbstractController
 {
 
 
-    function curl_get_contents($url)
-    {
-        $c = curl_init($url);
-        curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($c, CURLOPT_USERAGENT, "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0)");
-
-        $html = curl_exec($c);
-
-        if (curl_error($c))
-            die(curl_error($c));
-
-        $status = curl_getinfo($c, CURLINFO_HTTP_CODE);
-
-        curl_close($c);
-        return  $html ;
-    }
-
-
     /**
      * @Route("/", name="scraping")
      */
-    public function index(LoggerInterface $logger, Request $request)
+    public function index(LoggerInterface $logger , Request $request)
     {
 
 
         $form = $this->createFormBuilder()
-            ->add('type', TextType::class, ['label' => "Secteur d’activités", "attr" => ["class" => "input100"]])
-            ->add('postal', TextType::class, ['label' => 'Code postal / Département ', "attr" => ["class" => "input100"]])
-            ->add('save', SubmitType::class, ['label' => 'Importer', "attr" => ["class" => "contact100-form-btn"]])
+            ->add('type', TextType::class , ['label' =>"Secteur d’activités" ,"attr" => ["class" => "input100"]])
+            ->add('postal', TextType::class, ['label' => 'Code postal / Département ' ,"attr" => ["class" => "input100"]])
+            ->add('save', SubmitType::class, ['label' => 'Importer' ,"attr" => ["class" => "contact100-form-btn"]])
             ->getForm();
 
 
@@ -61,47 +43,29 @@ class ScrapingController extends AbstractController
             $scraping['url'] = "https://www.pagesjaunes.fr/recherche/departement/" . $scraping['postal'] . "/" . $scraping['type'] . "?quoiqui=" . $scraping['type'];
             $datas = [];
             $url = $scraping['url'];
-            $context = stream_context_create(
-                array(
-                    "http" => array(
-                        'method' => "GET",
-                        "header" => "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) 
-                            AppleWebKit/537.36 (KHTML, like Gecko) 
-                            Chrome/50.0.2661.102 Safari/537.36\r\n" .
-                            "accept: text/html,application/xhtml+xml,application/xml;q=0.9,
-                            image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3\r\n" .
-                            "accept-language: es-ES,es;q=0.9,en;q=0.8,it;q=0.7\r\n" .
-                            "accept-encoding: gzip, deflate, br\r\n"
-                    )
-                )
-            );
+            $opts = array('http' => array('header' => "User-Agent:MyAgent/1.0\r\n"));
+            $context = stream_context_create($opts);
 
             try {
-
-                $html = $this->curl_get_contents($url) ;
-                dump($html) ;
-
+                $html = file_get_contents($url, false, $context);
                 $crawler = new Crawler($html);
                 try {
-                    $pages = $this->countPaginationPages($crawler->filter('span.pagination-compteur')->text());
+                    $pages = $this->countPaginationPages($crawler->filter('span.pagination-compteur ')->text());
                     //  $fp = fopen('php://output', 'w');
-                } catch (\InvalidArgumentException $m) {
-                    dump($m->getMessage()) ;
-                    die();
-
-                    return $this->render('scraping/index.html.twig', [
-                        'form' => $form->createView(),
-                        'message' => "Page jaune retourne une erreur",
-                    ]);
-                }
+                } catch ( \InvalidArgumentException $m){
+                        return $this->render('scraping/index.html.twig', [
+                            'form' => $form->createView(),
+                            'message' => "Page jaune retourne une erreur",
+                        ]);
+                    }
                 $type = $data['type'];
                 $postal = $data['postal'];
                 for ($j = 1; $j < $pages + 1; $j++) {
                     $url = $scraping['url'];
                     if ($j > 1) $url .= "&page=" . $j;
-                    $html = $this->curl_get_contents($url) ;
-                    print_r($html) ;
-
+                    $opts = array('http' => array('header' => "User-Agent:MyAgent/1.0\r\n"));
+                    $context = stream_context_create($opts);
+                    $html = file_get_contents($url, false, $context);
                     $crawler = new Crawler($html);
 
                     $datas = array_merge($datas, $crawler->filter('li.bi-pro')->each(function (Crawler $node, $i) use ($postal, $type) {
@@ -148,20 +112,17 @@ class ScrapingController extends AbstractController
 
                 echo "\xEF\xBB\xBF";
                 return $response;
-            } catch (LogicException $m) {
-                print_r($m->getMessage()) ;
-die();
+            }
+            catch ( LogicException $m){
                 return $this->render('scraping/index.html.twig', [
                     'form' => $form->createView(),
                     'message' => "Page jaune retourne une erreur",
                 ]);
             }
-        }
+            }
 
         return $this->render('scraping/index.html.twig', [
             'form' => $form->createView(),
-            'message' => "",
-
         ]);
 
 
