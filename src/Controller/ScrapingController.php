@@ -20,28 +20,32 @@ class ScrapingController extends AbstractController
 
     function curl_get_contents($url)
     {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch,CURLOPT_USERAGENT,'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13');
-        $html = curl_exec($ch);
-        $data = curl_exec($ch);
-        curl_close($ch);
-        return $data;
+        $c = curl_init($url);
+        curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+
+        $html = curl_exec($c);
+
+        if (curl_error($c))
+            die(curl_error($c));
+
+        $status = curl_getinfo($c, CURLINFO_HTTP_CODE);
+
+        curl_close($c);
+        return  $html ;
     }
 
 
     /**
      * @Route("/", name="scraping")
      */
-    public function index(LoggerInterface $logger , Request $request)
+    public function index(LoggerInterface $logger, Request $request)
     {
 
 
         $form = $this->createFormBuilder()
-            ->add('type', TextType::class , ['label' =>"Secteur d’activités" ,"attr" => ["class" => "input100"]])
-            ->add('postal', TextType::class, ['label' => 'Code postal / Département ' ,"attr" => ["class" => "input100"]])
-            ->add('save', SubmitType::class, ['label' => 'Importer' ,"attr" => ["class" => "contact100-form-btn"]])
+            ->add('type', TextType::class, ['label' => "Secteur d’activités", "attr" => ["class" => "input100"]])
+            ->add('postal', TextType::class, ['label' => 'Code postal / Département ', "attr" => ["class" => "input100"]])
+            ->add('save', SubmitType::class, ['label' => 'Importer', "attr" => ["class" => "contact100-form-btn"]])
             ->getForm();
 
 
@@ -59,7 +63,7 @@ class ScrapingController extends AbstractController
             $context = stream_context_create(
                 array(
                     "http" => array(
-                        'method'=>"GET",
+                        'method' => "GET",
                         "header" => "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) 
                             AppleWebKit/537.36 (KHTML, like Gecko) 
                             Chrome/50.0.2661.102 Safari/537.36\r\n" .
@@ -72,27 +76,26 @@ class ScrapingController extends AbstractController
             );
 
             try {
-                $html = file_get_contents($url, false, $context);
-                
+
+                $html = $this->curl_get_contents($url) ;
 
                 $crawler = new Crawler($html);
                 try {
                     $pages = $this->countPaginationPages($crawler->filter('span.pagination-compteur ')->text());
                     //  $fp = fopen('php://output', 'w');
-                } catch ( \InvalidArgumentException $m){
-                        return $this->render('scraping/index.html.twig', [
-                            'form' => $form->createView(),
-                            'message' => "Page jaune retourne une erreur",
-                        ]);
-                    }
+                } catch (\InvalidArgumentException $m) {
+                    return $this->render('scraping/index.html.twig', [
+                        'form' => $form->createView(),
+                        'message' => "Page jaune retourne une erreur",
+                    ]);
+                }
                 $type = $data['type'];
                 $postal = $data['postal'];
                 for ($j = 1; $j < $pages + 1; $j++) {
                     $url = $scraping['url'];
                     if ($j > 1) $url .= "&page=" . $j;
-                 //   $opts = array('http' => array('header' => "User-Agent:MyAgent/1.0\r\n"));
-                 //   $context = stream_context_create($opts);
-                    $html = file_get_contents($url, false, $context);
+                    $html = $this->curl_get_contents($url) ;
+
                     $crawler = new Crawler($html);
 
                     $datas = array_merge($datas, $crawler->filter('li.bi-pro')->each(function (Crawler $node, $i) use ($postal, $type) {
@@ -139,14 +142,13 @@ class ScrapingController extends AbstractController
 
                 echo "\xEF\xBB\xBF";
                 return $response;
-            }
-            catch ( LogicException $m){
+            } catch (LogicException $m) {
                 return $this->render('scraping/index.html.twig', [
                     'form' => $form->createView(),
                     'message' => "Page jaune retourne une erreur",
                 ]);
             }
-            }
+        }
 
         return $this->render('scraping/index.html.twig', [
             'form' => $form->createView(),
