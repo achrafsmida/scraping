@@ -22,6 +22,7 @@ class ScrapingController extends AbstractController
     {
         $c = curl_init($url);
         curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($c, CURLOPT_USERAGENT, "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0)");
 
         $html = curl_exec($c);
 
@@ -82,7 +83,7 @@ class ScrapingController extends AbstractController
 
                 $crawler = new Crawler($html);
                 try {
-                    $pages = $this->countPaginationPages($crawler->filter('span.pagination-compteur ')->text());
+                    $pages = $this->countPaginationPages($crawler->filter('span.pagination-compteur')->text());
                     //  $fp = fopen('php://output', 'w');
                 } catch (\InvalidArgumentException $m) {
                     dump($m->getMessage()) ;
