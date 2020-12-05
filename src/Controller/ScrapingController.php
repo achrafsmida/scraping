@@ -22,7 +22,10 @@ class ScrapingController extends AbstractController
     {
 
 
-        $client = HttpClient::create();
+        $client = HttpClient::create(['headers' => [
+            'User-Agent'   => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36
+'
+        ]]);
         $response = $client->request('GET', $url);
         return $response->getContent();
     }
@@ -69,6 +72,15 @@ class ScrapingController extends AbstractController
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
 
+            $context = stream_context_create(
+                array(
+                    "http" => array(
+                        "header" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"
+                    )
+                )
+            );
+
+
             $data = $form->getData();
 
             $scraping['postal'] = urlencode($data["postal"]);
@@ -78,7 +90,9 @@ class ScrapingController extends AbstractController
             $datas = [];
             $url = $scraping['url'];
             try {
-                $html = $this->getHtmlCurl($url);
+               // $html = $this->getHtmlFromUrl($url);
+                $html = file_get_contents($url, false, $context);
+
                 $crawler = new Crawler($html);
                 try {
                     $pages = $this->countPaginationPages($crawler->filter('span.pagination-compteur ')->text());
@@ -95,7 +109,10 @@ class ScrapingController extends AbstractController
                     $url = $scraping['url'];
                     if ($j > 1) $url .= "&page=" . $j;
 
-                    $html = $this->getHtmlCurl($url);
+
+                    $html = file_get_contents($url, false, $context);
+
+                    //  $html = $this->getHtmlFromUrl($url);
 
                     $crawler = new Crawler($html);
 
