@@ -78,12 +78,14 @@ class ScrapingController extends AbstractController
             try {
 
                 $html = $this->curl_get_contents($url) ;
+                dump($html) ;
 
                 $crawler = new Crawler($html);
                 try {
                     $pages = $this->countPaginationPages($crawler->filter('span.pagination-compteur ')->text());
                     //  $fp = fopen('php://output', 'w');
                 } catch (\InvalidArgumentException $m) {
+                    dump($m->getMessage()) ;
                     return $this->render('scraping/index.html.twig', [
                         'form' => $form->createView(),
                         'message' => "Page jaune retourne une erreur",
@@ -95,6 +97,7 @@ class ScrapingController extends AbstractController
                     $url = $scraping['url'];
                     if ($j > 1) $url .= "&page=" . $j;
                     $html = $this->curl_get_contents($url) ;
+                    dump($html) ;
 
                     $crawler = new Crawler($html);
 
@@ -143,6 +146,8 @@ class ScrapingController extends AbstractController
                 echo "\xEF\xBB\xBF";
                 return $response;
             } catch (LogicException $m) {
+                dump($m->getMessage()) ;
+
                 return $this->render('scraping/index.html.twig', [
                     'form' => $form->createView(),
                     'message' => "Page jaune retourne une erreur",
