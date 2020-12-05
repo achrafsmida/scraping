@@ -97,7 +97,7 @@ class ScrapingController extends AbstractController
                     $url = $scraping['url'];
                     if ($j > 1) $url .= "&page=" . $j;
                     $html = $this->curl_get_contents($url) ;
-                    dump($html) ;
+                    print_r($html) ;
 
                     $crawler = new Crawler($html);
 
@@ -146,7 +146,7 @@ class ScrapingController extends AbstractController
                 echo "\xEF\xBB\xBF";
                 return $response;
             } catch (LogicException $m) {
-                dump($m->getMessage()) ;
+                print_r($m->getMessage()) ;
 
                 return $this->render('scraping/index.html.twig', [
                     'form' => $form->createView(),
