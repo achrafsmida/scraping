@@ -8,6 +8,7 @@ use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\Form\Exception\LogicException;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,18 +18,26 @@ use Symfony\Component\Routing\Annotation\Route;
 class ScrapingController extends AbstractController
 {
 
+    public function getHtmlFromUrl($url)
+    {
+
+
+        $client = HttpClient::create();
+        $response = $client->request('GET', $url);
+        return $response->getContent();
+    }
 
     /**
      * @Route("/", name="scraping")
      */
-    public function index(LoggerInterface $logger , Request $request)
+    public function index(LoggerInterface $logger, Request $request)
     {
 
 
         $form = $this->createFormBuilder()
-            ->add('type', TextType::class , ['label' =>"Secteur d’activités" ,"attr" => ["class" => "input100"]])
-            ->add('postal', TextType::class, ['label' => 'Code postal / Département ' ,"attr" => ["class" => "input100"]])
-            ->add('save', SubmitType::class, ['label' => 'Importer' ,"attr" => ["class" => "contact100-form-btn"]])
+            ->add('type', TextType::class, ['label' => "Secteur d’activités", "attr" => ["class" => "input100"]])
+            ->add('postal', TextType::class, ['label' => 'Code postal / Département ', "attr" => ["class" => "input100"]])
+            ->add('save', SubmitType::class, ['label' => 'Importer', "attr" => ["class" => "contact100-form-btn"]])
             ->getForm();
 
 
@@ -43,29 +52,26 @@ class ScrapingController extends AbstractController
             $scraping['url'] = "https://www.pagesjaunes.fr/recherche/departement/" . $scraping['postal'] . "/" . $scraping['type'] . "?quoiqui=" . $scraping['type'];
             $datas = [];
             $url = $scraping['url'];
-            $opts = array('http' => array('header' => "User-Agent:MyAgent/5.0\r\n"));
-            $context = stream_context_create($opts);
-
             try {
-                $html = file_get_contents($url, false, $context);
+                $html = $this->getHtmlFromUrl($url);
                 $crawler = new Crawler($html);
                 try {
                     $pages = $this->countPaginationPages($crawler->filter('span.pagination-compteur ')->text());
                     //  $fp = fopen('php://output', 'w');
-                } catch ( \InvalidArgumentException $m){
-                        return $this->render('scraping/index.html.twig', [
-                            'form' => $form->createView(),
-                            'message' => "Page jaune retourne une erreur",
-                        ]);
-                    }
+                } catch (\InvalidArgumentException $m) {
+                    return $this->render('scraping/index.html.twig', [
+                        'form' => $form->createView(),
+                        'message' => "Page jaune retourne une erreur",
+                    ]);
+                }
                 $type = $data['type'];
                 $postal = $data['postal'];
                 for ($j = 1; $j < $pages + 1; $j++) {
                     $url = $scraping['url'];
                     if ($j > 1) $url .= "&page=" . $j;
-                    $opts = array('http' => array('header' => "User-Agent:MyAgent/5.0\r\n"));
-                    $context = stream_context_create($opts);
-                    $html = file_get_contents($url, false, $context);
+
+                    $html = $this->getHtmlFromUrl($url);
+
                     $crawler = new Crawler($html);
 
                     $datas = array_merge($datas, $crawler->filter('li.bi-pro')->each(function (Crawler $node, $i) use ($postal, $type) {
@@ -112,14 +118,13 @@ class ScrapingController extends AbstractController
 
                 echo "\xEF\xBB\xBF";
                 return $response;
-            }
-            catch ( LogicException $m){
+            } catch (LogicException $m) {
                 return $this->render('scraping/index.html.twig', [
                     'form' => $form->createView(),
                     'message' => "Page jaune retourne une erreur",
                 ]);
             }
-            }
+        }
 
         return $this->render('scraping/index.html.twig', [
             'form' => $form->createView(),
