@@ -86,6 +86,8 @@ class ScrapingController extends AbstractController
                     //  $fp = fopen('php://output', 'w');
                 } catch (\InvalidArgumentException $m) {
                     dump($m->getMessage()) ;
+                    die();
+
                     return $this->render('scraping/index.html.twig', [
                         'form' => $form->createView(),
                         'message' => "Page jaune retourne une erreur",
@@ -147,7 +149,7 @@ class ScrapingController extends AbstractController
                 return $response;
             } catch (LogicException $m) {
                 print_r($m->getMessage()) ;
-
+die();
                 return $this->render('scraping/index.html.twig', [
                     'form' => $form->createView(),
                     'message' => "Page jaune retourne une erreur",
