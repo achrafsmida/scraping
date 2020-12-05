@@ -18,8 +18,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Controller/ScrapingController.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="115">
-              <caret line="53" column="36" selection-end-line="350" />
+            <state relative-caret-position="183">
+              <caret line="57" column="21" selection-start-line="57" selection-start-column="21" selection-end-line="57" selection-end-column="21" />
               <folding>
                 <element signature="e#34#62#0#PHP" expanded="true" />
               </folding>
@@ -41,15 +41,6 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="136">
               <caret line="8" column="35" selection-start-line="8" selection-start-column="35" selection-end-line="8" selection-end-column="35" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/public/index.html">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="663">
-              <caret line="39" column="38" selection-start-line="39" selection-end-line="40" />
             </state>
           </provider>
         </entry>
@@ -228,6 +219,11 @@
             <path>
               <item name="scraping" type="b2602c69:ProjectViewProjectNode" />
               <item name="scraping" type="462c0819:PsiDirectoryNode" />
+              <item name="public" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="scraping" type="b2602c69:ProjectViewProjectNode" />
+              <item name="scraping" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -286,7 +282,7 @@
       <workItem from="1606676498028" duration="3325000" />
       <workItem from="1606682945697" duration="627000" />
       <workItem from="1607124895721" duration="2979000" />
-      <workItem from="1607127896379" duration="1966000" />
+      <workItem from="1607127896379" duration="2246000" />
     </task>
     <task id="LOCAL-00001" summary="-- formulaire">
       <created>1606679170156</created>
@@ -320,7 +316,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="49171000" />
+    <option name="totallyTimeSpent" value="49451000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="838" extended-state="6" />
@@ -416,8 +412,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Controller/ScrapingController.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="115">
-          <caret line="53" column="36" selection-end-line="350" />
+        <state relative-caret-position="183">
+          <caret line="57" column="21" selection-start-line="57" selection-start-column="21" selection-end-line="57" selection-end-column="21" />
           <folding>
             <element signature="e#34#62#0#PHP" expanded="true" />
           </folding>
