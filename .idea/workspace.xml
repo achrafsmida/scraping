@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="328978c9-aa0b-4161-884e-2eaeb313e129" name="Default Changelist" comment="-- formulaire">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Controller/ScrapingController.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/Controller/ScrapingController.php" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -18,8 +18,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Controller/ScrapingController.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="183">
-              <caret line="57" column="21" selection-start-line="57" selection-start-column="21" selection-end-line="57" selection-end-column="21" />
+            <state relative-caret-position="88">
+              <caret line="97" column="46" selection-start-line="97" selection-start-column="46" selection-end-line="97" selection-end-column="46" />
               <folding>
                 <element signature="e#34#62#0#PHP" expanded="true" />
               </folding>
@@ -282,7 +282,7 @@
       <workItem from="1606676498028" duration="3325000" />
       <workItem from="1606682945697" duration="627000" />
       <workItem from="1607124895721" duration="2979000" />
-      <workItem from="1607127896379" duration="2246000" />
+      <workItem from="1607127896379" duration="2692000" />
     </task>
     <task id="LOCAL-00001" summary="-- formulaire">
       <created>1606679170156</created>
@@ -316,7 +316,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="49451000" />
+    <option name="totallyTimeSpent" value="49897000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="838" extended-state="6" />
@@ -412,8 +412,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Controller/ScrapingController.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="183">
-          <caret line="57" column="21" selection-start-line="57" selection-start-column="21" selection-end-line="57" selection-end-column="21" />
+        <state relative-caret-position="88">
+          <caret line="97" column="46" selection-start-line="97" selection-start-column="46" selection-end-line="97" selection-end-column="46" />
           <folding>
             <element signature="e#34#62#0#PHP" expanded="true" />
           </folding>
