@@ -23,8 +23,17 @@ class ScrapingController extends AbstractController
 
 
         $client = HttpClient::create(['headers' => [
-            'User-Agent'   => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36
-'
+		
+                'User-Agent'=> 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:63.0) Gecko/20100101 Firefox/63.0',
+                'Accept'=> 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language'=> 'fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3',
+                'Accept-Encoding'=> 'gzip, deflate, br',
+                'Referer'=> 'https://www.pagesjaunes.fr/',
+                'Content-Type'=> 'application/x-www-form-urlencoded',
+                'Content-Length'=> '379',
+                'Connection'=> 'keep-alive',
+                'Upgrade-Insecure-Requests'=> '1',
+                'Cache-Control'=> 'max-age=0'
         ]]);
         $response = $client->request('GET', $url);
         return $response->getContent();
@@ -90,7 +99,7 @@ class ScrapingController extends AbstractController
             $datas = [];
             $url = $scraping['url'];
             try {
-               // $html = $this->getHtmlFromUrl($url);
+              // $html = $this->getHtmlFromUrl($url);
                 $html = file_get_contents($url, false, $context);
 
                 $crawler = new Crawler($html);
@@ -138,6 +147,8 @@ class ScrapingController extends AbstractController
                     }
 
                     ));
+					sleep(3);
+
                 }
 
 
