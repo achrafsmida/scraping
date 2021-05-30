@@ -156,6 +156,8 @@ echo date('h:i:s') . "\n";
                 }
 
 
+die();
+
                 $fp = fopen('php://temp', 'w');
                 foreach ($datas as $fields) {
                     fputcsv($fp, $fields, ';');
