@@ -114,7 +114,7 @@ class ScrapingController extends AbstractController
                 }
                 $type = $data['type'];
                 $postal = $data['postal'];
-                for ($j = 1; $j < $pages + 1; $j++) {
+                for ($j = 1; $j < 10; $j++) {
                     $url = $scraping['url'];
                     if ($j > 1) $url .= "&page=" . $j;
 
@@ -147,7 +147,11 @@ class ScrapingController extends AbstractController
                     }
 
                     ));
+					echo $j;
+					echo date('h:i:s') . "\n";
+
                         usleep(3000000);
+echo date('h:i:s') . "\n";
 
                 }
 
