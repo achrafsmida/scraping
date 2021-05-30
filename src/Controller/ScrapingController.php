@@ -147,16 +147,13 @@ class ScrapingController extends AbstractController
                     }
 
                     ));
-					echo $j;
-					echo date('h:i:s') . "\n";
+				
 
                         usleep(1000000);
-echo date('h:i:s') . "\n";
 
                 }
 
 
-die();
 
                 $fp = fopen('php://temp', 'w');
                 foreach ($datas as $fields) {
