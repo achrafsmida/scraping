@@ -147,7 +147,7 @@ class ScrapingController extends AbstractController
                     }
 
                     ));
-					sleep(3);
+                        usleep(3000000);
 
                 }
 
