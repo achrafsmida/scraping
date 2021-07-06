@@ -32,6 +32,18 @@
             <span class="focus-input100"></span>
 
         </div>
+		
+		{% if form.page is defined%}
+		
+		<span>Nombre des Pages : {{pages}}</span>
+		 <label class="label-input100" for="page">{{ form_label(form.page) }}  *</label>
+
+        <div class="wrap-input100  validate-input">
+                {{ form_widget(form.page) }}
+            <span class="focus-input100"></span>
+
+        </div>
+		{% endif%}
 
         <div class="container-contact100-form-btn">
             {{ form_row(form.save) }}

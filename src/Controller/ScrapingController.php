@@ -8,6 +8,7 @@ use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\Form\Exception\LogicException;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -64,6 +65,17 @@ class ScrapingController extends AbstractController
         return $response ;
 
     }
+	
+	 private function getErrorMessages(\Symfony\Component\Form\Form $form) {      
+    $errors = array();
+    foreach ($form->getErrors(true, false) as $error) {
+        // My personnal need was to get translatable messages
+        // $errors[] = $this->trans($error->current()->getMessage());
+        $errors[] = $error->current()->getMessage();
+    }
+
+    return $errors;
+}
     /**
      * @Route("/", name="scraping")
      */
@@ -71,15 +83,19 @@ class ScrapingController extends AbstractController
     {
 
 
+$pages  = 0 ;
         $form = $this->createFormBuilder()
             ->add('type', TextType::class, ['label' => "Secteur d’activités", "attr" => ["class" => "input100"]])
-            ->add('postal', TextType::class, ['label' => 'Code postal / Département ', "attr" => ["class" => "input100"]])
-            ->add('save', SubmitType::class, ['label' => 'Importer', "attr" => ["class" => "contact100-form-btn"]])
-            ->getForm();
+            ->add('postal', TextType::class, ['label' => 'Code postal / Département ', "attr" => ["class" => "input100"]]) 
+			
 
+            ->add('save', SubmitType::class, ['label' => 'Chercher', "attr" => ["class" => "contact100-form-btn"]]) 
+            ->getForm();
 
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
+
+	
 
             $context = stream_context_create(
                 array(
@@ -95,6 +111,9 @@ class ScrapingController extends AbstractController
             $scraping['postal'] = urlencode($data["postal"]);
             $scraping['type'] = urlencode($data["type"]);
 
+if($scraping['type'] != "" and $scraping['postal'] != "" ){
+
+
             $scraping['url'] = "https://www.pagesjaunes.fr/recherche/departement/" . $scraping['postal'] . "/" . $scraping['type'] . "?quoiqui=" . $scraping['type'];
             $datas = [];
             $url = $scraping['url'];
@@ -105,19 +124,100 @@ class ScrapingController extends AbstractController
                 $crawler = new Crawler($html);
                 try {
                     $pages = $this->countPaginationPages($crawler->filter('span.pagination-compteur ')->text());
-                    //  $fp = fopen('php://output', 'w');
+					
+					return $this->redirectToRoute(
+                      'import',
+                        array('type' => $scraping['type'], 'postal' => $scraping['postal'] , 'pages'=> $pages),
+                       );
                 } catch (\InvalidArgumentException $m) {
+					dump($m->getMessage());die();
                     return $this->render('scraping/index.html.twig', [
                         'form' => $form->createView(),
                         'message' => "Page jaune retourne une erreur",
                     ]);
                 }
+		   } catch (LogicException $m) {
+			   					dump($m->getMessage());die();
+
+                return $this->render('scraping/index.html.twig', [
+                    'form' => $form->createView(),
+                    'message' => "Page jaune retourne une erreur",
+                ]);
+            }
+        }
+		}
+
+        return $this->render('scraping/index.html.twig', [
+            'form' => $form->createView(),
+            'pages' => $pages,
+        ]);
+
+
+    }
+	
+    /**
+     * @Route("/import/{type}/{postal}/{pages}", name="import")
+     */
+    public function import( $type ,$postal , $pages ,Request $request  )
+    {
+
+
+            $datas = [];
+
+  $context = stream_context_create(
+                array(
+                    "http" => array(
+                        "header" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"
+                    )
+                )
+            );
+
+
+        
+
+
+             $pagesPagination = [];
+					for( $p= 1 ; $p < ($pages/5) ; $p++){
+						$first = ( $p - 1 ) * 5 ;
+				$last = $first + 5;
+						$pagesPagination["Importez les données de la page " .$first ." à " .$last] = $p ;
+					}
+					
+					
+					
+					
+					 $form = $this->createFormBuilder()
+             ->add('type', TextType::class, ['data' => $type ,'label' => "Secteur d’activités", "attr" => ["class" => "input100"]])
+            ->add('postal', TextType::class, ['data' =>$postal   , 'label' => 'Code postal / Département ', "attr" => ["class" => "input100"]])
+            ->add('page', choiceType::class, [ 'choices' => $pagesPagination,'label' => 'pages', "attr" => ["class" => "input100 form-control"]])
+			                    
+
+            ->add('save', SubmitType::class, ['label' => 'Importer', "attr" => ["class" => "contact100-form-btn"]])
+            ->getForm();
+
+				
+				
+				        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+				
+				    $data = $form->getData();
+
+            $scraping['postal'] = urlencode($data["postal"]);
+            $scraping['type'] = urlencode($data["type"]);
+            $scraping['page'] = $data["page"];
+		 $scraping['url'] = "https://www.pagesjaunes.fr/recherche/departement/" . $scraping['postal'] . "/" . $scraping['type'] . "?quoiqui=" . $scraping['type'];
+
+				
+				$first = ( $scraping['page'] - 1 ) * 5 ;
+				$last = $first + 5;
+				
+
+				
                 $type = $data['type'];
                 $postal = $data['postal'];
-                for ($j = 1; $j < 10; $j++) {
+                for ($j = $first; $j < $last ; $j++) {
                     $url = $scraping['url'];
                     if ($j > 1) $url .= "&page=" . $j;
-
 
                     $html = file_get_contents($url, false, $context);
 
@@ -169,25 +269,20 @@ class ScrapingController extends AbstractController
                 $response->headers->set('Content-Encoding', 'UTF-8');
 
                 $response->setCharset('UTF-8');
-                $fileName = $scraping['postal'] . "-" . $scraping['type'] . ".csv";
+                $fileName = $scraping['postal'] . "-" . $scraping['type'] . "-" . $scraping['page'] . ".csv";
                 $response->headers->set('Content-Disposition', "attachment; filename=" . $fileName . "");;
 
                 echo "\xEF\xBB\xBF";
                 return $response;
-            } catch (LogicException $m) {
-                return $this->render('scraping/index.html.twig', [
-                    'form' => $form->createView(),
-                    'message' => "Page jaune retourne une erreur",
-                ]);
-            }
-        }
-
-        return $this->render('scraping/index.html.twig', [
+				
+				
+		}
+         
+  return $this->render('scraping/index.html.twig', [
             'form' => $form->createView(),
+            'pages' => $pages,
         ]);
-
-
-    }
+	}
 
     public function countPaginationPages($pagination)
     {
